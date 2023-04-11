@@ -1,0 +1,5 @@
+FR, face_recognition library
+
+import image of person, then recognizes person in image
+
+uses openCV
