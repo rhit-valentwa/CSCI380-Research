@@ -25,6 +25,10 @@ selectorSize = 20
 players = [{'x': 0, 'y': 0, 'symbol': 'X', 'old_index_distance': 0, 'index_distance': 0, 'is_clicking': False, 'color': (0, 255, 0)},
            {'x': 0, 'y': 0, 'symbol': 'O', 'old_index_distance': 0, 'index_distance': 0, 'is_clicking': False, 'color': (0, 0, 255)}]
 
+playerWon = False
+playerWinMessage = ''
+winLocations = [[], []]
+
 grid = [
   ['', '', ''],
   ['', '', ''],
@@ -39,6 +43,34 @@ def detectMousePosition(event, x, y, flags, params):
       global mouseX
       global mouseY
       mouseX, mouseY = x, y
+
+
+# finds winner, checks to see if board is full
+def checkWin():
+  global playerWon
+  global playerWinMessage
+  global winLocations
+  
+  winning_positions = [[(0, 0), (0, 1), (0, 2)],
+                       [(1, 0), (1, 1), (1, 2)],
+                       [(2, 0), (2, 1), (2, 2)],
+                       [(0, 0), (1, 0), (2, 0)],
+                       [(0, 1), (1, 1), (2, 1)],
+                       [(0, 2), (1, 2), (2, 2)],
+                       [(0, 0), (1, 1), (2, 2)],
+                       [(2, 0), (1, 1), (0, 2)]]
+
+  # run loop through winning_positions
+  for position in winning_positions:
+      for playerIndex in range(0, 1):
+        #if grid has a winning position
+        if grid[position[0][1]][position[0][0]] == players[playerIndex]['symbol']\
+          and grid[position[1][1]][position[1][0]] == players[playerIndex]['symbol']\
+          and grid[position[2][1]][position[2][0]] == players[playerIndex]['symbol']:
+          playerWon = True
+          playerWinMessage = 'Player ' + str(playerIndex) + ' won!'
+          winLocations = [[position[0][0], position[0][1]],
+                          [position[2][0], position[2][1]]]
 
 def drawGrid(image):
   for y in range(0, 3):
@@ -55,10 +87,12 @@ def drawGrid(image):
           if playerX <= squareX + tileSize and\
             playerX + selectorSize >= squareX and\
             playerY <= squareY + tileSize and\
-            playerY + selectorSize >= squareY:
-            if player['is_clicking']:
+            playerY + selectorSize >= squareY and\
+            playerWon == False:
+            if player['is_clicking'] and grid[y][x] == '':
               color = (75, 75, 75)
               grid[y][x] = player['symbol']
+              checkWin()
               player['is_clicking'] = False
             break
           
@@ -90,7 +124,7 @@ with mp_hands.Hands(
     index = 0
 
     drawGrid(image)
-    
+
     # removes the outer lines of boxes on the edges of the board
     rectangle(int(image.shape[1] / 3) + (tileSize * 3) - 2, int(image.shape[0] / 5) - 1, 3, tileSize * 3 + 2, (100, 100, 100), -1)
     rectangle(int(image.shape[1] / 3) - 2, int(image.shape[0] / 5) - 1, 3, tileSize * 3 + 2, (100, 100, 100), -1)
@@ -116,7 +150,7 @@ with mp_hands.Hands(
         players[index]['old_index_distance'] = players[index]['index_distance']
         players[index]['index_distance'] = math.sqrt((keypoints[8]['x'] - keypoints[5]['x'])**2 + (keypoints[8]['y'] - keypoints[5]['y'])**2)
 
-        if players[index]['index_distance'] + 0.02 < players[index]['old_index_distance']:
+        if players[index]['index_distance'] + 0.035 < players[index]['old_index_distance']:
           players[index]['is_clicking'] = True
         
         cv2.rectangle(image, (players[index]['x'], players[index]['y']), (players[index]['x'] + selectorSize, players[index]['y'] + selectorSize), shape_color, -1)
@@ -124,8 +158,18 @@ with mp_hands.Hands(
         
         index += 1
     
+    if playerWon == True:
+      cv2.line(image, ((winLocations[0][0] * tileSize) + int(image.shape[1] / 3) + int(tileSize / 2), (winLocations[0][1] * tileSize) + int(image.shape[0] / 5) + int(tileSize / 2)),\
+                      ((winLocations[1][0] * tileSize) + int(image.shape[1] / 3) + int(tileSize / 2), (winLocations[1][1] * tileSize) + int(image.shape[0] / 5) + int(tileSize / 2)), (0, 0, 255), 3)
+
+
     image = cv2.resize(image, (screen_width, screen_height))
-    cv2.imshow('Tic-Tac-Toe', cv2.flip(image, 1))
+    image = cv2.flip(image, 1)
+
+    if playerWon == True:
+      cv2.putText(image, playerWinMessage, (int(image.shape[1] / 2.8), int(image.shape[0] / 6)), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+
+    cv2.imshow('Tic-Tac-Toe', image)
     cv2.setMouseCallback('Tic-Tac-Toe', detectMousePosition)  
 
     if cv2.waitKey(1) == ord('q'):
