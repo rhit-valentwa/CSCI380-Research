@@ -2,7 +2,6 @@ import cv2
 import mediapipe as mp
 import math
 import tkinter
-import numpy
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -22,10 +21,11 @@ if not cap.read()[0]:
 tileSize = 0 # default value
 selectorSize = 20
 
-players = [{'x': 0, 'y': 0, 'symbol': 'X', 'old_index_distance': 0, 'index_distance': 0, 'is_clicking': False, 'color': (0, 255, 0)},
-           {'x': 0, 'y': 0, 'symbol': 'O', 'old_index_distance': 0, 'index_distance': 0, 'is_clicking': False, 'color': (0, 0, 255)}]
+players = [{'id': 1, 'x': 0, 'y': 0, 'symbol': 'X', 'old_index_distance': 0, 'index_distance': 0, 'is_clicking': False, 'color': (0, 255, 0)},
+           {'id': 2, 'x': 0, 'y': 0, 'symbol': 'O', 'old_index_distance': 0, 'index_distance': 0, 'is_clicking': False, 'color': (0, 0, 255)}]
 
 playerWon = False
+playerTurn = 1
 playerWinMessage = ''
 winLocations = [[], []]
 
@@ -68,11 +68,12 @@ def checkWin():
           and grid[position[1][1]][position[1][0]] == players[playerIndex]['symbol']\
           and grid[position[2][1]][position[2][0]] == players[playerIndex]['symbol']:
           playerWon = True
-          playerWinMessage = 'Player ' + str(playerIndex) + ' won!'
+          playerWinMessage = 'Player ' + str(playerIndex + 1) + ' won!'
           winLocations = [[position[0][0], position[0][1]],
                           [position[2][0], position[2][1]]]
 
 def drawGrid(image):
+  global playerTurn
   for y in range(0, 3):
       for x in range(0, 3):
         color = (100, 100, 100)
@@ -89,11 +90,15 @@ def drawGrid(image):
             playerY <= squareY + tileSize and\
             playerY + selectorSize >= squareY and\
             playerWon == False:
-            if player['is_clicking'] and grid[y][x] == '':
+            if player['is_clicking'] and grid[y][x] == '' and player['id'] == playerTurn:
               color = (75, 75, 75)
               grid[y][x] = player['symbol']
               checkWin()
               player['is_clicking'] = False
+              if playerTurn == 1:
+                playerTurn = 2
+              else:
+                playerTurn = 1
             break
           
         cv2.rectangle(image, (squareX, squareY), (squareX + tileSize, squareY + tileSize), color, -1)
@@ -103,7 +108,7 @@ def drawGrid(image):
 
 with mp_hands.Hands(
     model_complexity=0,
-    min_detection_confidence=0.8,
+    min_detection_confidence=0.9,
     min_tracking_confidence=0.5,
     ) as hands:
   while cap.isOpened():
@@ -168,6 +173,9 @@ with mp_hands.Hands(
 
     if playerWon == True:
       cv2.putText(image, playerWinMessage, (int(image.shape[1] / 2.8), int(image.shape[0] / 6)), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+    else:
+      cv2.putText(image, 'Player ' + str(playerTurn - 1) + ' ("' + players[playerTurn - 1]['symbol'] + '") has a turn', (int(image.shape[1] / 4), int(image.shape[0] / 6)), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+    
 
     cv2.imshow('Tic-Tac-Toe', image)
     cv2.setMouseCallback('Tic-Tac-Toe', detectMousePosition)  
