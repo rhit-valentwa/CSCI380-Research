@@ -1,3 +1,12 @@
+# Uses Python 3.10.4
+# Modules:
+#   cv2
+#   mediapipe
+#   math
+#   tkinter
+
+# --- imports ---
+
 import cv2
 import mediapipe as mp
 import math
@@ -62,7 +71,7 @@ def checkWin():
 
   # run loop through winning_positions
   for position in winning_positions:
-      for playerIndex in range(0, 1):
+      for playerIndex in range(0, 2):
         #if grid has a winning position
         if grid[position[0][1]][position[0][0]] == players[playerIndex]['symbol']\
           and grid[position[1][1]][position[1][0]] == players[playerIndex]['symbol']\
@@ -174,7 +183,7 @@ with mp_hands.Hands(
     if playerWon == True:
       cv2.putText(image, playerWinMessage, (int(image.shape[1] / 2.8), int(image.shape[0] / 6)), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
     else:
-      cv2.putText(image, 'Player ' + str(playerTurn - 1) + ' ("' + players[playerTurn - 1]['symbol'] + '") has a turn', (int(image.shape[1] / 4), int(image.shape[0] / 6)), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
+      cv2.putText(image, 'Player ' + str(playerTurn) + ' ("' + players[playerTurn - 1]['symbol'] + '") has a turn', (int(image.shape[1] / 4), int(image.shape[0] / 6)), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
     
 
     cv2.imshow('Tic-Tac-Toe', image)
