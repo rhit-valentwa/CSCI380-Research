@@ -47,13 +47,6 @@ grid = [
 def rectangle(x, y, w, h, color, fill):
   cv2.rectangle(image, (x, y), (x + w, y + h), (color), fill)
 
-def detectMousePosition(event, x, y, flags, params):
-   if event == cv2.EVENT_LBUTTONDBLCLK:
-      global mouseX
-      global mouseY
-      mouseX, mouseY = x, y
-
-
 # finds winner, checks to see if board is full
 def checkWin():
   global playerWon
@@ -186,8 +179,7 @@ with mp_hands.Hands(
       cv2.putText(image, 'Player ' + str(playerTurn) + ' ("' + players[playerTurn - 1]['symbol'] + '") has a turn', (int(image.shape[1] / 4), int(image.shape[0] / 6)), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2, cv2.LINE_AA)
     
 
-    cv2.imshow('Tic-Tac-Toe', image)
-    cv2.setMouseCallback('Tic-Tac-Toe', detectMousePosition)  
+    cv2.imshow('Tic-Tac-Toe', image)  
 
     if cv2.waitKey(1) == ord('q'):
         break
